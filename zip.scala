@@ -7,17 +7,19 @@ import java.util.zip.ZipOutputStream
 
 object zip {
   def createFileList(file: File, outputFilename: String): List[String] = {
-    if (file.isFile) {
-      if (file.getName() != outputFilename)
-        List(file.getAbsoluteFile.toString)
-      else 
-        List()
-    } else if (file.isDirectory) {
+    file match {
+      case file if file.isFile => {
+        if (file.getName != outputFilename) List(file.getAbsoluteFile.toString)
+        else List()
+      }
+      case file if file.isDirectory => {
         file.list.toList.foldLeft(List[String]()) ((pathList: List[String], path: String) =>
           pathList ++ createFileList(new File(file, path), outputFilename))
-    } else {
-        println("Invalid path")
+      }
+      case _ => {
+        println("Invalid Path")
         sys.exit(2)
+      }
     }
   }
  
