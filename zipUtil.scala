@@ -44,7 +44,7 @@ object zipUtil {
         // read file data into the input stream, then write it
         // to the zip output stream
         var len = 1
-        while ({var len = inputStream.read(buffer); len > 0}) {
+        while (len > 0) {
           len = inputStream.read(buffer)
           if (len > 0)
           zipOutputStream.write(buffer, 0, len)
