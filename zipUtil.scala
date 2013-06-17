@@ -106,7 +106,7 @@ object zipUtil {
       createZip(filePaths, outputFilename, path)
       println("Finished!")
     }
-    else throw new IllegalArgumentException("\nZip Usage: <source> <dest>" + "\n" + "Unzip Usage: <zip file>")
+    else throw new IllegalArgumentException("\nZip Usage: <source> <dest>" + "\n" + "Unzip Usage: <file.zip>")
   }
 }
 
