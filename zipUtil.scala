@@ -73,16 +73,6 @@ object zipUtil {
     val entries = zip.entries
     while(entries.hasMoreElements){
       val entry = entries.nextElement
-
-      /**
-      // check if entry is in a subdirectory
-      val path = entry.getName.split(File.separator)
-      if (path.size >= 2) {
-        val subdir = path(path.size-2)
-        
-      }
-      */
-
       val entryPath = {
         if (entry.getName.startsWith(basename)) entry.getName.substring(basename.length) 
         else entry.getName
@@ -116,6 +106,7 @@ object zipUtil {
       createZip(filePaths, outputFilename, path)
       println("Finished!")
     }
-    else throw new IllegalArgumentException
+    else throw new IllegalArgumentException("\nZip Usage: <source> <dest>" + "\n" + "Unzip Usage: <zip file>")
   }
 }
+
