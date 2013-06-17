@@ -70,14 +70,18 @@ object zipUtil {
     todir.mkdirs
 
     val zip = new ZipFile(file)
-    val enu = zip.entries
-    while(enu.hasMoreElements){
-      val entry = enu.nextElement
+    val entries = zip.entries
+    while(entries.hasMoreElements){
+      val entry = entries.nextElement
+
+      /**
+      // check if entry is in a subdirectory
       val path = entry.getName.split(File.separator)
       if (path.size >= 2) {
         val subdir = path(path.size-2)
         
       }
+      */
 
       val entryPath = {
         if (entry.getName.startsWith(basename)) entry.getName.substring(basename.length) 
