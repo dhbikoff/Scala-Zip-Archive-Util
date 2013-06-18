@@ -1,13 +1,6 @@
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-//import java.io.InputStream
-import java.io.IOException
-//import java.io.OutputStream
+import java.io.{File, FileInputStream, FileOutputStream, InputStream, IOException, OutputStream}
 import java.net.URI
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
-import java.util.zip.ZipOutputStream
+import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
 
 object zipArchiveUtil {
 
