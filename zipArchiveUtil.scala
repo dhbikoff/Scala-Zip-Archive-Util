@@ -1,15 +1,15 @@
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.InputStream
+//import java.io.InputStream
 import java.io.IOException
-import java.io.OutputStream
+//import java.io.OutputStream
 import java.net.URI
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
-object zipUtil {
+object zipArchiveUtil {
 
   def createFileList(file: File, outputFilename: String): List[String] = {
     file match {
@@ -18,7 +18,7 @@ object zipUtil {
         else List()
       }
       case file if file.isDirectory => {
-        file.list.toList.foldLeft(List[String]()) ((pathList: List[String], path: String) =>
+        file.list.foldLeft(List[String]()) ((pathList: List[String], path: String) =>
           pathList ++ createFileList(new File(file, path), outputFilename))
       }
       case _ => throw new IOException("Bad path. No file or directory found.")
