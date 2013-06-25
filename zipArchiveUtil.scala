@@ -1,3 +1,5 @@
+import scala.collection.JavaConversions._
+import scala.io._
 import java.io.{File, FileInputStream, FileOutputStream, InputStream, IOException, OutputStream}
 import java.net.URI
 import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
@@ -24,14 +26,6 @@ object zipArchiveUtil {
     else new ZipEntry(new URI(parentPath).relativize(new URI(filename)).toString)
   }
 
-  def copyStream(in: InputStream, out: OutputStream): Unit = {
-    var buffer = new Array[Byte](1024)
-    var len = 1
-    while ({len = in.read(buffer); len > 0}) {
-      out.write(buffer, 0, len)
-    }
-  }
-
   def createZip(filePaths: List[String], outputFilename: String, parentPath: String) = {
     try {
       println("Zipping...")
@@ -42,13 +36,14 @@ object zipArchiveUtil {
         println("adding " + name)
         val zipEntry = addFileToZipEntry(name, parentPath, filePaths.size)
         zipOutputStream.putNextEntry(zipEntry)
-        val inputStream = new FileInputStream(name)
-        copyStream(inputStream, zipOutputStream)
-        inputStream.close()
+        val inputSrc = new BufferedSource(new FileInputStream(name))(Codec.ISO8859)
+        inputSrc foreach { c: Char => zipOutputStream.write(c) }
+        inputSrc.close
       })
-
-    zipOutputStream.closeEntry()
-    zipOutputStream.close()
+    
+    zipOutputStream.closeEntry
+    zipOutputStream.close
+    fileOutputStream.close
 
     } catch {
       case e: IOException => { 
@@ -63,14 +58,11 @@ object zipArchiveUtil {
     todir.mkdirs
 
     val zip = new ZipFile(file)
-    val entries = zip.entries
-    while(entries.hasMoreElements){
-      val entry = entries.nextElement
+    zip.entries foreach { entry =>
       val entryPath = {
         if (entry.getName.startsWith(basename)) entry.getName.substring(basename.length) 
         else entry.getName
       }
-
       // create output directory if it doesn't exist already
       if (entry.getName.split(File.separator).size >= 2) {
         val entryRelativePath = entry.getName.substring(0,entry.getName.lastIndexOf(File.separator))
@@ -78,13 +70,12 @@ object zipArchiveUtil {
         val entryOutputDir = new File(entryDirPath)
         if (!entryOutputDir.exists) entryOutputDir.mkdir
       }
-
       println("Extracting to " + todir + File.separator + entryPath)
-      val istream = zip.getInputStream(entry)
+      val inputSrc = new BufferedSource(zip.getInputStream(entry))(Codec.ISO8859)
       val ostream = new FileOutputStream(new File(todir, entryPath))
-      copyStream(istream, ostream)
+      inputSrc foreach { c: Char => ostream.write(c) }
+      inputSrc.close
       ostream.close
-      istream.close
     }
   }
 
@@ -102,5 +93,3 @@ object zipArchiveUtil {
     else throw new IllegalArgumentException("\nZip Usage: <source> <dest>" + "\n" + "Unzip Usage: <file.zip>")
   }
 }
-
-
