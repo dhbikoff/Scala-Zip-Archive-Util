@@ -23,12 +23,15 @@ object ZipArchiveUtil {
   def addFileToZipEntry(filename: String, parentPath: String, filePathsCount: Int): ZipEntry = {
     if (filePathsCount <= 1) new ZipEntry(new File(filename).getName)
     // use relative path to avoid adding absolute path directories
-    else new ZipEntry(new URI(parentPath).relativize(new URI(filename)).toString)
+    else {
+      val relative = new File(parentPath).toURI.relativize(new File(filename).toURI).getPath
+      println(relative)
+      new ZipEntry(relative)
+    }
   }
 
   def createZip(filePaths: List[String], outputFilename: String, parentPath: String) = {
     try {
-      println("Zipping...")
       val fileOutputStream = new FileOutputStream(outputFilename)
       val zipOutputStream = new ZipOutputStream(fileOutputStream)
 
@@ -53,18 +56,21 @@ object ZipArchiveUtil {
   }
   
   def unzip(file: File): Unit = {
+    println("Unzipping = " + file.getName)
     val basename = file.getName.substring(0, file.getName.lastIndexOf("."))
     val todir = new File(file.getParentFile, basename)
     todir.mkdirs
 
     val zip = new ZipFile(file)
     zip.entries foreach { entry =>
+      println("PATH " + entryPath)
       val entryPath = {
         if (entry.getName.startsWith(basename)) entry.getName.substring(basename.length) 
         else entry.getName
       }
       // create output directory if it doesn't exist already
-      if (entry.getName.split(File.separator).size >= 2) {
+      val splitPath = entry.getName.split(File.separator)
+      if (splitPath.size >= 2) {
         val entryRelativePath = entry.getName.substring(0,entry.getName.lastIndexOf(File.separator))
         val entryDirPath = todir.getAbsolutePath + File.separator + entryRelativePath
         val entryOutputDir = new File(entryDirPath)
