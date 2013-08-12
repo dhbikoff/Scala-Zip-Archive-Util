@@ -25,7 +25,6 @@ object ZipArchiveUtil {
     // use relative path to avoid adding absolute path directories
     else {
       val relative = new File(parentPath).toURI.relativize(new File(filename).toURI).getPath
-      println(relative)
       new ZipEntry(relative)
     }
   }
@@ -57,8 +56,8 @@ object ZipArchiveUtil {
   
   def unzip(file: File): Unit = {
     val basename = file.getName.substring(0, file.getName.lastIndexOf("."))
-    val todir = new File(file.getParentFile, basename)
-    todir.mkdirs
+    val destdir = new File(file.getParentFile, basename)
+    destdir.mkdirs
 
     val zip = new ZipFile(file)
     zip.entries foreach { entry =>
@@ -70,7 +69,7 @@ object ZipArchiveUtil {
       // create output directory if it doesn't exist already
       val splitPath = entry.getName.split(File.separator).dropRight(1)
       if (splitPath.size >= 1) {
-        splitPath.foldLeft(todir.getName)( (a: String, b: String) => {
+        splitPath.foldLeft(destdir.getName)( (a: String, b: String) => {
           val path = a + File.separator + b
           if (!(new File(path).exists)) {
             new File(path).mkdir
@@ -79,10 +78,10 @@ object ZipArchiveUtil {
         })
       }
 
-      // extract file
-      println("Extracting to " + todir + File.separator + entryPath)
+      // write file to dest
+      println("Extracting " + destdir + File.separator + entryPath)
       val inputSrc = new BufferedSource(zip.getInputStream(entry))(Codec.ISO8859)
-      val ostream = new FileOutputStream(new File(todir, entryPath))
+      val ostream = new FileOutputStream(new File(destdir, entryPath))
       inputSrc foreach { c: Char => ostream.write(c) }
       inputSrc.close
       ostream.close
@@ -98,8 +97,7 @@ object ZipArchiveUtil {
       val file = new File(path)
       val filePaths = createFileList(file, outputFilename)
       createZip(filePaths, outputFilename, path)
-      println("Finished!")
     }
-    else throw new IllegalArgumentException("\nZip Usage: <source> <dest>" + "\n" + "Unzip Usage: <file.zip>")
+    else throw new IllegalArgumentException("\nZip Usage: <source> <dest>" + "\n" + "Unzip Usage: <file.zip>\n")
   }
 }
