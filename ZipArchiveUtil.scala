@@ -56,26 +56,30 @@ object ZipArchiveUtil {
   }
   
   def unzip(file: File): Unit = {
-    println("Unzipping = " + file.getName)
     val basename = file.getName.substring(0, file.getName.lastIndexOf("."))
     val todir = new File(file.getParentFile, basename)
     todir.mkdirs
 
     val zip = new ZipFile(file)
     zip.entries foreach { entry =>
-      println("PATH " + entryPath)
       val entryPath = {
         if (entry.getName.startsWith(basename)) entry.getName.substring(basename.length) 
         else entry.getName
       }
+      
       // create output directory if it doesn't exist already
-      val splitPath = entry.getName.split(File.separator)
-      if (splitPath.size >= 2) {
-        val entryRelativePath = entry.getName.substring(0,entry.getName.lastIndexOf(File.separator))
-        val entryDirPath = todir.getAbsolutePath + File.separator + entryRelativePath
-        val entryOutputDir = new File(entryDirPath)
-        if (!entryOutputDir.exists) entryOutputDir.mkdir
+      val splitPath = entry.getName.split(File.separator).dropRight(1)
+      if (splitPath.size >= 1) {
+        splitPath.foldLeft(todir.getName)( (a: String, b: String) => {
+          val path = a + File.separator + b
+          if (!(new File(path).exists)) {
+            new File(path).mkdir
+          }
+          path
+        })
       }
+
+      // extract file
       println("Extracting to " + todir + File.separator + entryPath)
       val inputSrc = new BufferedSource(zip.getInputStream(entry))(Codec.ISO8859)
       val ostream = new FileOutputStream(new File(todir, entryPath))
