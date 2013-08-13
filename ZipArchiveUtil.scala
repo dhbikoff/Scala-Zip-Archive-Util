@@ -1,5 +1,6 @@
-import scala.collection.JavaConversions._
-import scala.io._
+import scala.collection.JavaConversions.enumerationAsScalaIterator
+import scala.io.BufferedSource
+import scala.io.Codec
 import java.io.{File, FileInputStream, FileOutputStream, InputStream, 
                 IOException, OutputStream}
 import java.net.URI
