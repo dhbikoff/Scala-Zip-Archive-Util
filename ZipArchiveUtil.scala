@@ -1,6 +1,7 @@
 import scala.collection.JavaConversions._
 import scala.io._
-import java.io.{File, FileInputStream, FileOutputStream, InputStream, IOException, OutputStream}
+import java.io.{File, FileInputStream, FileOutputStream, InputStream, 
+                IOException, OutputStream}
 import java.net.URI
 import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
 
@@ -9,27 +10,35 @@ object ZipArchiveUtil {
   def createFileList(file: File, outputFilename: String): List[String] = {
     file match {
       case file if file.isFile => {
-        if (file.getName != outputFilename) List(file.getAbsoluteFile.toString)
-        else List()
+        if (file.getName != outputFilename) 
+          List(file.getAbsoluteFile.toString)
+        else 
+          List()
       }
       case file if file.isDirectory => {
-        file.list.foldLeft(List[String]()) ((pathList: List[String], path: String) =>
-          pathList ++ createFileList(new File(file, path), outputFilename))
+        val fList = file.list
+        // Add all files in current dir to list and recur on subdirs
+        fList.foldLeft(List[String]())((pList: List[String], path: String) =>
+            pList ++ createFileList(new File(file, path), outputFilename))
       }
       case _ => throw new IOException("Bad path. No file or directory found.")
     }
   }
 
-  def addFileToZipEntry(filename: String, parentPath: String, filePathsCount: Int): ZipEntry = {
-    if (filePathsCount <= 1) new ZipEntry(new File(filename).getName)
-    // use relative path to avoid adding absolute path directories
-    else {
-      val relative = new File(parentPath).toURI.relativize(new File(filename).toURI).getPath
-      new ZipEntry(relative)
+  def addFileToZipEntry(filename: String, parentPath: String, 
+    filePathsCount: Int): ZipEntry = {
+      if (filePathsCount <= 1) 
+        new ZipEntry(new File(filename).getName)  
+      else { 
+        // use relative path to avoid adding absolute path directories
+        val relative = new File(parentPath).toURI.
+          relativize(new File(filename).toURI).getPath
+        new ZipEntry(relative)
     }
   }
 
-  def createZip(filePaths: List[String], outputFilename: String, parentPath: String) = {
+  def createZip(filePaths: List[String], outputFilename: String, 
+    parentPath: String) = {
     try {
       val fileOutputStream = new FileOutputStream(outputFilename)
       val zipOutputStream = new ZipOutputStream(fileOutputStream)
@@ -38,7 +47,8 @@ object ZipArchiveUtil {
         println("adding " + name)
         val zipEntry = addFileToZipEntry(name, parentPath, filePaths.size)
         zipOutputStream.putNextEntry(zipEntry)
-        val inputSrc = new BufferedSource(new FileInputStream(name))(Codec.ISO8859)
+        val inputSrc = new BufferedSource(
+          new FileInputStream(name))(Codec.ISO8859)
         inputSrc foreach { c: Char => zipOutputStream.write(c) }
         inputSrc.close
       })
@@ -56,32 +66,39 @@ object ZipArchiveUtil {
   
   def unzip(file: File): Unit = {
     val basename = file.getName.substring(0, file.getName.lastIndexOf("."))
-    val destdir = new File(file.getParentFile, basename)
-    destdir.mkdirs
+    val destDir = new File(file.getParentFile, basename)
+    destDir.mkdirs
 
     val zip = new ZipFile(file)
     zip.entries foreach { entry =>
+      val entryName = entry.getName
       val entryPath = {
-        if (entry.getName.startsWith(basename)) entry.getName.substring(basename.length) 
-        else entry.getName
+        if (entryName.startsWith(basename)) 
+          entryName.substring(basename.length) 
+        else 
+          entryName
       }
       
       // create output directory if it doesn't exist already
       val splitPath = entry.getName.split(File.separator).dropRight(1)
       if (splitPath.size >= 1) {
-        splitPath.foldLeft(destdir.getName)( (a: String, b: String) => {
-          val path = a + File.separator + b
-          if (!(new File(path).exists)) {
-            new File(path).mkdir
+        // create intermediate directories if they don't exist
+        val dirBuilder = new StringBuilder(destDir.getName)
+        splitPath.foldLeft(dirBuilder)( (a: StringBuilder, b: String) => {
+          val path = a.append(File.separator + b)
+          val str = path.mkString
+          if (!(new File(str).exists)) {
+            new File(str).mkdir
           }
           path
         })
       }
 
       // write file to dest
-      println("Extracting " + destdir + File.separator + entryPath)
-      val inputSrc = new BufferedSource(zip.getInputStream(entry))(Codec.ISO8859)
-      val ostream = new FileOutputStream(new File(destdir, entryPath))
+      println("Extracting " + destDir + File.separator + entryPath)
+      val inputSrc = new BufferedSource(
+        zip.getInputStream(entry))(Codec.ISO8859)
+      val ostream = new FileOutputStream(new File(destDir, entryPath))
       inputSrc foreach { c: Char => ostream.write(c) }
       inputSrc.close
       ostream.close
@@ -98,6 +115,10 @@ object ZipArchiveUtil {
       val filePaths = createFileList(file, outputFilename)
       createZip(filePaths, outputFilename, path)
     }
-    else throw new IllegalArgumentException("\nZip Usage: <source> <dest>" + "\n" + "Unzip Usage: <file.zip>\n")
+    else {
+      val err = "\nZip Usage: <source> <dest>" + 
+        "\n" + "Unzip Usage: <file.zip>\n"
+      throw new IllegalArgumentException(err)
+    }
   }
 }
